@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!--
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+    -->
+
+    <appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <charset>UTF-8</charset>
+            <Pattern>[%d{yyyy-MM-dd HH:mm:ss}] [%-5level] [%logger{36}.%thread][%L] - %msg%n</Pattern>
+        </encoder>
+    </appender>
+
+    <appender name="dailyRollingFileAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs//app.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <fileNamePattern>logs//app.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy
+                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <!-- or whenever the file size reaches 50MB -->
+                <maxFileSize>1000MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <!-- keep 30 days' worth of history -->
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <Pattern>[%d{yyyy-MM-dd HH:mm:ss}] [%-5level] [%logger{36}.%thread][%L] - %msg%n</Pattern>
+        </encoder>
+
+    </appender>
+
+    <logger name="org.irgroup" level="INFO" />
+
+    <root level="WARN">
+        <appender-ref ref="consoleAppender" />
+        <appender-ref ref="dailyRollingFileAppender" />
+    </root>
+
+</configuration>
