@@ -1,18 +1,12 @@
 package org.irgroup.spark.ml;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.spark.ml.clustering.KMeans;
 import org.apache.spark.ml.clustering.KMeansModel;
-import org.apache.spark.ml.clustering.KMeansSummary;
 import org.apache.spark.ml.linalg.Vector;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SaveMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.IOException;
 
 /**
  * <pre>
@@ -31,21 +25,27 @@ import java.io.IOException;
 
 public class KMeanExample extends SparkManager {
 
-	private static final Logger logger = LoggerFactory.getLogger(KMeanExample.class);
+	private static final Logger	logger					= LoggerFactory.getLogger(KMeanExample.class);
 
-	private final String KMeanFile = "./data/kmean";
-	private final String documentVectorFile = "./data/documentVector";
-	private final String clusteringResultFile = "./data/clusteringResultDF";
+	private String				dataDir;
+	private String				KMeanFile				= "kmean";
+	private String				documentVectorFile		= "documentVector";
+	private String				clusteringResultFile	= "clusteringResultDF";
 
-	int kmeansK;
-	KMeans kmeans;
-	KMeansModel model;
+	int							kmeansK;
+	KMeans						kmeans;
+	KMeansModel					model;
 
-	Dataset<Row> documentVectorDF = load(documentVectorFile);
-	Dataset<Row> clusteringResultDF;
+	Dataset<Row>				documentVectorDF;
+	Dataset<Row>				clusteringResultDF;
 
-	public KMeanExample(int K) {
+	public KMeanExample(int K, String dataDir) {
 		super(KMeanExample.class.getSimpleName());
+
+		this.dataDir = dataDir;
+		KMeanFile = this.dataDir + "/" + KMeanFile;
+		documentVectorFile = this.dataDir + "/" + documentVectorFile;
+		clusteringResultFile = this.dataDir + "/" + clusteringResultFile;
 
 		kmeansK = K;
 
@@ -54,6 +54,8 @@ public class KMeanExample extends SparkManager {
 				.setPredictionCol("cluster")
 				.setInitMode("k-means||")
 				.setK(kmeansK);
+
+		documentVectorDF = load(documentVectorFile);
 	}
 
 	public void fit()
@@ -75,7 +77,7 @@ public class KMeanExample extends SparkManager {
 	public void load()
 	{
 		model = KMeansModel.load(KMeanFile);
-		clusteringResultDF = load(clusteringResultFile);
+		clusteringResultDF = load(clusteringResultFile).cache();
 	}
 
 	public Vector getClusterCenter(int cid)

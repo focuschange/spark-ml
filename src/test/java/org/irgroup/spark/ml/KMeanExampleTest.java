@@ -6,8 +6,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
 /**
  * <pre>
  *      org.irgroup.spark.ml
@@ -25,15 +23,16 @@ import static org.junit.Assert.*;
 
 public class KMeanExampleTest {
 	KMeanExample kmean;
+	String dataDir = "data";
 
 	@Before
 	public void setUp() throws Exception {
-		kmean = new KMeanExample(1000);
+		kmean = new KMeanExample(1000, dataDir);
 	}
 
 	@After
 	public void tearDown() throws Exception {
-
+		kmean.stop();
 	}
 
 	@Test

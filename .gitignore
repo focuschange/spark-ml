@@ -1,0 +1,12 @@
+.DS_Store
+.classpath
+.project
+.settings/
+.gradle/
+*.iml
+.idea/
+dependency-reduced-pom.xml
+spark-warehouse/
+target/
+logs/
+data/*

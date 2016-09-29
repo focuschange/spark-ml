@@ -1,5 +1,6 @@
 package org.irgroup.scala.util
 
+import breeze.linalg.sum
 import org.apache.spark.ml.linalg.Vector
 
 
@@ -56,5 +57,4 @@ object PrahaMath {
 
     dotProduct / (math.sqrt(normA) * math.sqrt(normB))
   }
-
 }

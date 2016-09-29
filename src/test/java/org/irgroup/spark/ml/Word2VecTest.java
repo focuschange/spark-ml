@@ -10,12 +10,11 @@ import org.junit.Before;
 import org.junit.Test;
 import scala.collection.mutable.WrappedArray;
 
-import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * <pre>
@@ -33,16 +32,17 @@ import static org.junit.Assert.*;
  */
 
 public class Word2VecTest {
-	Word2VecExample word2Vec;
+	private Word2VecExample word2Vec;
+	private String dataDir = "data";
 
 	@Before
 	public void setUp() throws Exception {
-		word2Vec = new Word2VecExample(MethodHandles.lookup().lookupClass().getName());
+		word2Vec = new Word2VecExample(dataDir);
 	}
 
 	@After
 	public void tearDown() throws Exception {
-
+		word2Vec.stop();
 	}
 
 	@Test
@@ -53,8 +53,9 @@ public class Word2VecTest {
 	@Test
 	public void findSynonym() throws Exception {
 		word2Vec.load();
-		word2Vec.findSynonym("반팔티", 10);
-		word2Vec.documentVectorDF.show(false);
+		//word2Vec.findSynonym("반팔티", 10).show(false);
+		word2Vec.findSynonym("2단자동", 10).show(false);
+		word2Vec.getVectors().show(false);
 	}
 
 	@Test
@@ -68,7 +69,7 @@ public class Word2VecTest {
 		HashMap<String, Integer> map = new HashMap();
 
 		for (Row r : row) {
-			WrappedArray<String> was = r.getAs("terms");
+			WrappedArray<String> was = r.getAs("termskma");
 
 			for (int i = 0; i < was.size(); i++) {
 				String ss = was.apply(i);
@@ -92,17 +93,21 @@ public class Word2VecTest {
 
 		assert word2Vec.model != null : "model is null";
 		System.out.println("word vector count = " + word2Vec.model.getVectors().count());
+		System.out.println("word vector show..");
+		word2Vec.model.getVectors().show(false);
 
 		assert word2Vec.documentVectorDF != null : "documentVectorDF is null";
 		System.out.println("document vector size = " + word2Vec.documentVectorDF.count());
 		System.out.println("documentVectorDF show..");
 		word2Vec.documentVectorDF.show(false);
+
+
 	}
 
 	@Test
 	public void printWordVector() throws Exception {
 		word2Vec.load();
-		word2Vec.getWordVector("반팔티").show(false);
+		word2Vec.getWordVector("2단자동", true).show(false);
 	}
 
 	@Test
@@ -164,7 +169,7 @@ public class Word2VecTest {
 
 	@Test
 	public void loadRawData() throws Exception {
-		word2Vec.loadRawData("./data/terms.txt");
+		word2Vec.loadRawData(dataDir + "/terms.txt");
 		assertNotNull(word2Vec.featureDF);
 		word2Vec.featureDF.show(false);
 	}

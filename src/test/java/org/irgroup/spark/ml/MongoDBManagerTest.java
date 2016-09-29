@@ -9,14 +9,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Scanner;
-
 /**
  * <pre>
  *      org.irgroup.spark.ml
  *        |_ MongoDBManagerTest.java
  * </pre>
  * <p>
+ * 
  * <pre>
  *
  * </pre>
@@ -26,14 +25,16 @@ import java.util.Scanner;
  * @Version : 1.0
  */
 
-public class MongoDBManagerTest {
-	MongoDBManager mongodb;
-	private Scanner scan = new Scanner(System.in);
-	String uri = "mongodb://praha:praha!%40#@praha-manage-stage/praha";
-	String database = "praha";
+public class MongoDBManagerTest
+{
+	private MongoDBManager	mongodb;
+	private String			uri			= "mongodb://praha:praha!%40#@praha-manage-stage/praha";
+	private String			database	= "praha";
+	private String			dataDir		= "data";
 
 	@Before
-	public void setUp() throws Exception {
+	public void setUp() throws Exception
+	{
 		System.out.println("start mongodb session");
 
 		mongodb = new MongoDBManager("local");
@@ -46,13 +47,16 @@ public class MongoDBManagerTest {
 	}
 
 	@After
-	public void tearDown() throws Exception {
+	public void tearDown() throws Exception
+	{
 		mongodb.disconnect();
 	}
 
 	@Test
-	public void schema() throws Exception {
-		Dataset<Row> df = mongodb.select("dealFeatureInfosWithIdx", "select did, features.dc[0] as dc, features.dckma[0] as dckma from dealFeatureInfosWithIdx");
+	public void schema() throws Exception
+	{
+		Dataset<Row> df = mongodb.select("dealFeatureInfosWithIdx",
+				"select did, features.dc[0] as dc, features.dckma[0] as dckma from dealFeatureInfosWithIdx");
 		df.show(false);
 
 		StructType schema = df.schema();
@@ -64,7 +68,8 @@ public class MongoDBManagerTest {
 		System.out.println("StructField length : " + sfs.length);
 
 		int i = 0;
-		for (StructField sf : sfs) {
+		for (StructField sf : sfs)
+		{
 			System.out.println();
 			System.out.println(sf.toString());
 			System.out.println("sf name = " + sf.name());
@@ -75,14 +80,16 @@ public class MongoDBManagerTest {
 			System.out.println("default size   = " + sf.dataType().defaultSize());
 			System.out.println("sql            = " + sf.dataType().sql());
 
-
-			if (sf.dataType() == DataTypes.IntegerType) {
+			if (sf.dataType() == DataTypes.IntegerType)
+			{
 				System.out.println(i + "th IntegerType.");
 			}
-			else if (sf.dataType().typeName().equals("array")) {
+			else if (sf.dataType().typeName().equals("array"))
+			{
 				System.out.println(i + "th ArrayType.");
 			}
-			else if (sf.dataType().typeName().equals("struct")) {
+			else if (sf.dataType().typeName().equals("struct"))
+			{
 				System.out.println(i + "th StructType.");
 			}
 			i++;
@@ -90,20 +97,22 @@ public class MongoDBManagerTest {
 	}
 
 	@Test
-	public void save() throws Exception {
+	public void save() throws Exception
+	{
 		System.out.println("select");
-//		Dataset<Row> df = mongodb.select("dealFeatureInfosWithIdx", "select * from dealFeatureInfosWithIdx");
-//		df.show(false);
-//		df.printSchema();
-//		System.out.println("save");
-//		mongodb.save(df, "data/mongo");
+		// Dataset<Row> df = mongodb.select("dealFeatureInfosWithIdx", "select * from dealFeatureInfosWithIdx");
+		// df.show(false);
+		// df.printSchema();
+		// System.out.println("save");
+		// mongodb.save(df, "data/mongo");
 
-		Dataset<Row> ndf = mongodb.select("dealFeatureInfosWithIdx", "select did, features.dc[0] as dc, features.dckma[0] as dckma from dealFeatureInfosWithIdx");
+		Dataset<Row> ndf = mongodb.select("dealFeatureInfosWithIdx",
+				"select did, features.dc[0] as dc, features.dckma[0] as dckma from dealFeatureInfosWithIdx");
 		ndf.show(false);
 		ndf.printSchema();
 
 		System.out.println("saveAsText");
-		mongodb.saveAsText(ndf, "data/mongo.txt");
+		mongodb.saveAsText(ndf, dataDir + "/mongo.txt");
 	}
 
 }

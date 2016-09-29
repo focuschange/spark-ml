@@ -27,6 +27,7 @@ import java.util.List;
  *        |_ MongoDBManager.java
  * </pre>
  * <p>
+ * 
  * <pre>
  *
  * </pre>
@@ -36,44 +37,48 @@ import java.util.List;
  * @Version : 1.0
  */
 
-public class MongoDBManager {
-	private static final Logger logger = LoggerFactory.getLogger(MongoDBManager.class);
+public class MongoDBManager
+{
+	private static final Logger	logger	= LoggerFactory.getLogger(MongoDBManager.class);
 
-	private JavaSparkContext context;
-	private SparkConf config;
-	private SparkSession session;
+	private JavaSparkContext	context;
+	private SparkConf			config;
+	private SparkSession		session;
 
-	public MongoDBManager(String master) {
-		config = new SparkConf()
-				.setAppName(MongoDBManager.class.getSimpleName())
-				.setMaster(master);
+	public MongoDBManager(String master)
+	{
+		config = new SparkConf().setAppName(MongoDBManager.class.getSimpleName()).setMaster(master);
 	}
 
-	public void connect() {
+	public void connect()
+	{
 		context = new JavaSparkContext(config);
-		session = SparkSession.builder()
-				.config(config)
-				.getOrCreate();
+		session = SparkSession.builder().config(config).getOrCreate();
 	}
 
-	public void disconnect() {
+	public void disconnect()
+	{
 		context.sc().stop();
 	}
 
-	public void setConfig(String key, String value) {
+	public void setConfig(String key, String value)
+	{
 		config.set(key, value);
 	}
 
-	public ReadConfig setReadConfig(String key, String value) {
+	public ReadConfig setReadConfig(String key, String value)
+	{
 		// ReadConfig.withOption을 사용하려면 SparkConf에 Key값이 존재해야 함(버그인 듯)
 		// 그래서 config에 직접 set 해 주고 withOption을 사용하지 않는다
 		config.set(key, value);
 		return ReadConfig.create(config);
 	}
 
-	public Dataset<Row> select(String collection, String[] fields) {
+	public Dataset<Row> select(String collection, String[] fields)
+	{
 		List<Column> list = new ArrayList<Column>();
-		for (String field : fields) {
+		for (String field : fields)
+		{
 			list.add(new Column(field));
 		}
 
@@ -84,7 +89,8 @@ public class MongoDBManager {
 				.select(seq);
 	}
 
-	public Dataset<Row> select(String collection, String sql) {
+	public Dataset<Row> select(String collection, String sql)
+	{
 		Dataset<Row> df = MongoSpark.load(context, setReadConfig("spark.mongodb.input.collection", collection))
 				.toDF()
 				.persist(StorageLevel.MEMORY_AND_DISK());
@@ -93,35 +99,45 @@ public class MongoDBManager {
 		return session.sqlContext().sql(sql).cache();
 	}
 
-	public void save(Dataset<Row> data, String path) {
-		try {
+	public void save(Dataset<Row> data, String path)
+	{
+		try
+		{
 			FileUtils.deleteDirectory(new File(path));
 			data.write().mode(SaveMode.ErrorIfExists).save(path);
-		} catch (IOException e) {
+		}
+		catch (IOException e)
+		{
 			e.printStackTrace();
 		}
 	}
 
-	public void saveAsText(Dataset<Row> data, String path) {
+	public void saveAsText(Dataset<Row> data, String path)
+	{
 		BufferedWriter writer = null;
 
-		try {
+		try
+		{
 			writer = new BufferedWriter(new FileWriter(new File(path)));
 
 			StructField[] fields = data.schema().fields();
 			Iterator<Row> itr = data.toLocalIterator();
 
 			int count = 0;
-			while (itr.hasNext()) {
+			while (itr.hasNext())
+			{
 				count++;
 				Row r = itr.next();
 
-				for (int i = 0; i < fields.length; i++) {
-					if (fields[i].dataType().typeName().equals("array")) {
+				for (int i = 0; i < fields.length; i++)
+				{
+					if (fields[i].dataType().typeName().equals("array"))
+					{
 						WrappedArray<Object> e = r.getAs(i);
 						writer.write(e.mkString(" "));
 					}
-					else {
+					else
+					{
 						writer.write("" + r.getAs(i));
 					}
 					writer.newLine();
@@ -132,12 +148,15 @@ public class MongoDBManager {
 
 			writer.close();
 
-		} catch (IOException e) {
+		}
+		catch (IOException e)
+		{
 			e.printStackTrace();
 		}
 	}
 
-	public JavaSparkContext getContext() {
+	public JavaSparkContext getContext()
+	{
 		return context;
 	}
 
