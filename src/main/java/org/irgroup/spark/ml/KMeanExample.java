@@ -5,6 +5,7 @@ import org.apache.spark.ml.clustering.KMeansModel;
 import org.apache.spark.ml.linalg.Vector;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.storage.StorageLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,45 +33,58 @@ public class KMeanExample extends SparkManager {
 	private String				documentVectorFile		= "documentVector";
 	private String				clusteringResultFile	= "clusteringResultDF";
 
-	int							kmeansK;
-	KMeans						kmeans;
-	KMeansModel					model;
+	private int					kmeansK;
+	private int					kmeansMaxIteration;
 
-	Dataset<Row>				documentVectorDF;
-	Dataset<Row>				clusteringResultDF;
+	public KMeans				kmeans;
+	public KMeansModel			model;
 
-	public KMeanExample(int K, String dataDir) {
-		super(KMeanExample.class.getSimpleName());
+	public Dataset<Row>			documentVectorDF;
+	public Dataset<Row>			clusteringResultDF;
 
-		this.dataDir = dataDir;
-		KMeanFile = this.dataDir + "/" + KMeanFile;
+	public KMeanExample(String configFile)
+	{
+		super(KMeanExample.class.getSimpleName(), configFile);
+
+		dataDir = getDataPath();
+		KMeanFile = dataDir + "/" + KMeanFile;
 		documentVectorFile = this.dataDir + "/" + documentVectorFile;
 		clusteringResultFile = this.dataDir + "/" + clusteringResultFile;
 
-		kmeansK = K;
+		kmeansK = Integer.parseInt(getProperty(SparkManager.KMEANS_K));
+		kmeansMaxIteration = Integer.parseInt(getProperty(SparkManager.KMEANS_ITERATION_MAX));
 
 		kmeans = new KMeans()
 				.setFeaturesCol("result")
 				.setPredictionCol("cluster")
 				.setInitMode("k-means||")
-				.setK(kmeansK);
+				.setK(kmeansK)
+				.setMaxIter(kmeansMaxIteration)
+			;
 
-		documentVectorDF = load(documentVectorFile);
+		documentVectorDF = load(documentVectorFile).cache();
 	}
 
 	public void fit()
 	{
-		model = kmeans.fit(documentVectorDF);
+		logger.info("kmean fit");
+		Dataset<Row> tmp = documentVectorDF.repartition(1024).persist(StorageLevel.MEMORY_AND_DISK());
+		model = kmeans.fit(tmp);
 	}
 
 	public void transform()
 	{
+
+		logger.info("kmean transform");
 		clusteringResultDF = model != null ? model.transform(documentVectorDF) : null;
 	}
 
 	public void save()
 	{
+		logger.info("save : {}", KMeanFile);
 		save(model, KMeanFile);
+
+		logger.info("save : {}", clusteringResultFile);
 		save(clusteringResultDF, clusteringResultFile);
 	}
 
@@ -94,6 +108,20 @@ public class KMeanExample extends SparkManager {
 
 	@Override
 	public void stop() throws Exception {
+		sparkSession.stop();
+	}
 
+	public static void main(String[] args) throws Exception
+	{
+
+		if (args.length < 1)
+		{
+			System.out.println("Usage : " + KMeanExample.class.getName() + " [configFile]");
+			System.exit(0);
+		}
+
+		KMeanExample kmean = new KMeanExample(args[0]);
+		kmean.run(null);
+		kmean.stop();
 	}
 }

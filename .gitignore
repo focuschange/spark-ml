@@ -4,6 +4,7 @@
 .settings/
 .gradle/
 *.iml
+.*.swp
 .idea/
 dependency-reduced-pom.xml
 spark-warehouse/

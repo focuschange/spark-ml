@@ -39,10 +39,10 @@ public class ExampleCmdLauncher
 	Word2VecExample				word2Vec;
 	KMeanExample				kmean;
 
-	public ExampleCmdLauncher(String dataDir)
+	public ExampleCmdLauncher(String configFile)
 	{
-		word2Vec = new Word2VecExample(dataDir);
-		kmean = new KMeanExample(1000, dataDir);
+		word2Vec = new Word2VecExample(configFile);
+		kmean = new KMeanExample(configFile);
 
 		word2Vec.load();
 		kmean.load();
@@ -57,7 +57,7 @@ public class ExampleCmdLauncher
 
 		for (Row r : row)
 		{
-			WrappedArray<String> was = r.getAs("terms");
+			WrappedArray<String> was = r.getAs("termskma");
 
 			for (int i = 0; i < was.size(); i++)
 			{
@@ -75,7 +75,7 @@ public class ExampleCmdLauncher
 
 	private void printKMean()
 	{
-		kmean.documentVectorDF.show(false);
+		//kmean.documentVectorDF.show();
 
 		System.out.println("[model info]");
 		Vector[] centers = kmean.model.clusterCenters();
@@ -99,10 +99,10 @@ public class ExampleCmdLauncher
 			KMeansSummary summary = kmean.model.summary();
 
 			System.out.println("transformed cluster...");
-			summary.cluster().show(false);
+			summary.cluster().show();
 
 			System.out.println("predictions ...");
-			summary.predictions().show(false);
+			summary.predictions().show();
 
 			System.out.println("Summary's K = " + summary.k());
 
@@ -126,7 +126,7 @@ public class ExampleCmdLauncher
 			if (kmean.clusteringResultDF != null)
 			{
 				System.out.println("clusteringResultDF show..");
-				kmean.clusteringResultDF.show(false);
+				kmean.clusteringResultDF.show();
 			}
 
 		}
@@ -178,7 +178,7 @@ public class ExampleCmdLauncher
 	public void printWordVector(String word, int count)
 	{
 		Dataset<Row> vectors = word2Vec.getWordVector(word, true);
-		vectors.show(count, false);
+		vectors.show(count);
 	}
 
 	public void printDocumentVector(int id)
@@ -207,7 +207,7 @@ public class ExampleCmdLauncher
 		Dataset<Row> synonym = word2Vec.findSynonym(word, count);
 		if (synonym != null)
 		{
-			synonym.show(count, false);
+			synonym.show(count);
 		}
 		else
 		{

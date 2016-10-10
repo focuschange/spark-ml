@@ -23,11 +23,11 @@ import org.junit.Test;
 
 public class KMeanExampleTest {
 	KMeanExample kmean;
-	String dataDir = "data";
+	String configFile = "config/config.properties";
 
 	@Before
 	public void setUp() throws Exception {
-		kmean = new KMeanExample(1000, dataDir);
+		kmean = new KMeanExample(configFile);
 	}
 
 	@After

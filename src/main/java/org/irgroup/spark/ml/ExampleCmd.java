@@ -50,12 +50,12 @@ public class ExampleCmd
 		exit, word2word, word2doc, word2cluster, doc2word, doc2doc, doc2cluster, cluster2word, cluster2doc, cluster2cluster
 	}
 
-	private Scanner				scan	= new Scanner(System.in);
+	private Scanner				scan	= new Scanner(System.in, "UTF-8");
 	private ExampleCmdLauncher	launcher;
 
-	public ExampleCmd(String dataDir)
+	public ExampleCmd(String configFile)
 	{
-		launcher = new ExampleCmdLauncher(dataDir);
+		launcher = new ExampleCmdLauncher(configFile);
 	}
 
 	private <E extends Enum<E>> void printCommand(Class<E> e, String command)
@@ -314,7 +314,7 @@ public class ExampleCmd
 
 		if (args.length < 1)
 		{
-			System.out.println("Usage : " + ExampleCmd.class.getName() + " [data-path]");
+			System.out.println("Usage : " + ExampleCmd.class.getName() + " [configFile]");
 			System.exit(0);
 		}
 

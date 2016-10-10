@@ -33,16 +33,21 @@ import static org.junit.Assert.assertNotNull;
 
 public class Word2VecTest {
 	private Word2VecExample word2Vec;
-	private String dataDir = "data";
+	private String configFile = "config/config.properties";
 
 	@Before
 	public void setUp() throws Exception {
-		word2Vec = new Word2VecExample(dataDir);
+		word2Vec = new Word2VecExample(configFile);
 	}
 
 	@After
 	public void tearDown() throws Exception {
 		word2Vec.stop();
+	}
+
+	@Test
+	public void isLocal() throws Exception {
+		System.out.println(word2Vec.isLocal());
 	}
 
 	@Test
@@ -169,8 +174,13 @@ public class Word2VecTest {
 
 	@Test
 	public void loadRawData() throws Exception {
-		word2Vec.loadRawData(dataDir + "/terms.txt");
+		word2Vec.loadRawData(word2Vec.getDataPath() + "/terms.txt");
 		assertNotNull(word2Vec.featureDF);
 		word2Vec.featureDF.show(false);
+	}
+
+	@Test
+	public void debug() throws Exception {
+
 	}
 }

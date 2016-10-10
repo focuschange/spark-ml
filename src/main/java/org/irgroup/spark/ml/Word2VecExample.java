@@ -1,5 +1,6 @@
 package org.irgroup.spark.ml;
 
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.ml.feature.Word2Vec;
 import org.apache.spark.ml.feature.Word2VecModel;
 import org.apache.spark.ml.linalg.Vector;
@@ -7,12 +8,10 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.types.*;
+import org.apache.spark.storage.StorageLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -53,11 +52,11 @@ public class Word2VecExample extends SparkManager
 	/**
 	 * @param driverName
 	 */
-	public Word2VecExample(String dataDir)
+	public Word2VecExample(String configFile)
 	{
-		super(Word2VecExample.class.getSimpleName());
+		super(Word2VecExample.class.getSimpleName(), configFile);
 
-		this.dataDir = dataDir;
+		this.dataDir = getDataPath();
 		rawDataFile = this.dataDir + "/" + rawDataFile;
 		featureDFFile = this.dataDir + "/" + featureDFFile;
 		word2vecModelFile = this.dataDir + "/" + word2vecModelFile;
@@ -81,36 +80,37 @@ public class Word2VecExample extends SparkManager
 	 */
 	public void loadRawData(String rawFile)
 	{
-		try
+		JavaRDD<String> textFile = sparkSession.sparkContext().textFile(rawFile, 1).toJavaRDD();
+		List<String> tt = textFile.collect();
+
+		document = new ArrayList<Row>();
+
+		int i = 0;
+		String[] field = new String[3];
+
+		for(String s : tt)
 		{
-			BufferedReader in = new BufferedReader(new FileReader(rawFile));
-			String line;
-			document = new ArrayList<Row>();
+			field[i%3] = s;
+			i ++;
 
-			while ((line = in.readLine()) != null)
+			if(i % 3 == 0)
 			{
-				String id = line;
-				String terms1 = in.readLine();
-				String terms2 = in.readLine();
-
 				// The first row is term list
-				Row r = RowFactory.create(Integer.parseInt(id),
-							Arrays.asList(terms1.split(" ")),
-							Arrays.asList(terms2.split(" ")),
-							Arrays.asList((terms1 + " " + terms2).split(" ")));
+				Row r = RowFactory.create(Integer.parseInt(field[0]),
+						Arrays.asList(field[1].split(" ")),
+						Arrays.asList(field[2].split(" ")),
+						Arrays.asList((field[1] + " " + field[2]).split(" ")));
 
 				document.add(r);
+
 			}
-
-			in.close();
-
-			featureDF = sparkSession.createDataFrame(document, getTermsSchema());
-
 		}
-		catch (IOException e)
-		{
-			logger.error(e.getMessage());
-		}
+
+		featureDF = sparkSession.createDataFrame(document, getTermsSchema());
+		featureDF.repartition(256).persist(StorageLevel.MEMORY_AND_DISK());
+
+		featureDF.show(false);
+
 	}
 
 	public void fit()
@@ -121,7 +121,8 @@ public class Word2VecExample extends SparkManager
 				.setInputCol("termskma")
 				.setOutputCol("result")
 				.setVectorSize(100)
-				.setMinCount(0);
+				.setMinCount(0)
+				.setNumPartitions(8);
 		model = word2Vec.fit(featureDF);
 	}
 
@@ -136,8 +137,13 @@ public class Word2VecExample extends SparkManager
 		assert model != null : "Yet not created model.";
 		assert documentVectorDF != null : "Yet not created documentVectorDF.";
 
+		logger.info("save : {}", featureDFFile);
 		save(featureDF, featureDFFile);
+
+		logger.info("save : {}", documentVectorFile);
 		save(documentVectorDF, documentVectorFile);
+
+		logger.info("save : {}", word2vecModelFile);
 		save(model, word2vecModelFile);
 	}
 
@@ -213,6 +219,20 @@ public class Word2VecExample extends SparkManager
 
 	public void stop() throws Exception
 	{
+		sparkSession.stop();
+	}
 
+	public static void main(String[] args) throws Exception
+	{
+
+		if (args.length < 1)
+		{
+			System.out.println("Usage : " + Word2VecExample.class.getName() + " [configFile]");
+			System.exit(0);
+		}
+
+		Word2VecExample word2Vec = new Word2VecExample(args[0]);
+		word2Vec.run(null);
+		word2Vec.stop();
 	}
 }

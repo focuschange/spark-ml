@@ -32,7 +32,7 @@
 
     <logger name="org.irgroup" level="INFO" />
 
-    <root level="WARN">
+    <root level="INFO">
         <appender-ref ref="consoleAppender" />
         <appender-ref ref="dailyRollingFileAppender" />
     </root>
